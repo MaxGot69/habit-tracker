@@ -4,6 +4,7 @@ import com.maxgot.habit_tracker.dto.HabitRequest;
 import com.maxgot.habit_tracker.dto.HabitResponse;
 import com.maxgot.habit_tracker.entity.Habit;
 import com.maxgot.habit_tracker.exception.HabitNotFoundException;
+import com.maxgot.habit_tracker.repository.HabitRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -16,9 +17,14 @@ import java.util.concurrent.atomic.AtomicLong;
 
 @Service
 public class HabitService {
-    Map<Long, Habit> habits = new HashMap<>();
     AtomicLong idCounter = new AtomicLong(1);
     Long id;
+
+    private final HabitRepository habitRepository;
+
+    public HabitService(HabitRepository habitRepository){
+        this.habitRepository = habitRepository;
+    }
 
     public HabitResponse create(HabitRequest request) {
 
@@ -29,10 +35,8 @@ public class HabitService {
         habit.setTarget(request.getTarget());
         habit.setCreatedAt(Instant.now());
 
-        id = idCounter.getAndIncrement();//генер новый id в -> map
-        habit.setId(id);
-        habits.put(id, habit);
-        //преобраз Habit -> HabitResponse
+        Habit saved = habitRepository.save(habit);
+
         HabitResponse response = new HabitResponse();
         response.setId(habit.getId());
         response.setName(habit.getName());
@@ -43,10 +47,9 @@ public class HabitService {
     }
 
     public HabitResponse getById(Long id) {
-        Habit habit = habits.get(id);
-        if(habit == null) {
-            throw new HabitNotFoundException("Habit not found with id: " + id);
-        }
+        Habit habit = habitRepository.findById(id)
+                .orElseThrow(() -> new HabitNotFoundException("Habit not found with id: " + id));
+
             HabitResponse response = new HabitResponse();
             response.setId(habit.getId());
             response.setName(habit.getName());
@@ -58,7 +61,7 @@ public class HabitService {
 
     public List<HabitResponse> getAll(){
         List<HabitResponse> responses = new ArrayList<>();
-        for (Habit habit : habits.values()) {
+        for (Habit habit : habitRepository.findAll()) {
             HabitResponse response = new HabitResponse();
             response.setId(habit.getId());
             response.setName(habit.getName());
@@ -71,15 +74,13 @@ public class HabitService {
     }
 
     public HabitResponse update(Long id, HabitRequest request) {
-        Habit habit = habits.get(id);
-        if(habit == null) {
-            throw new HabitNotFoundException("Habit not found with id: " + id);
-        }
+        Habit habit = habitRepository.findById(id)
+                .orElseThrow(() -> new HabitNotFoundException("Habit not found with id: " + id));
         HabitResponse response = new HabitResponse();
         habit.setName(request.getName());
         habit.setDescription(request.getDescription());
         habit.setTarget(request.getTarget());
-        habits.put(id, habit);
+        habitRepository.save(habit);
         response.setId(habit.getId());
         response.setName(habit.getName());
         response.setDescription(habit.getDescription());
@@ -89,10 +90,8 @@ public class HabitService {
     }
 
     public void delete(Long id) {
-        Habit habit = habits.get(id);
-        if(habit == null) {
-            throw new HabitNotFoundException("Habit not found with id: " + id);
-        }
-        habits.remove(id);
+        Habit habit = habitRepository.findById(id)
+                .orElseThrow(() -> new HabitNotFoundException("Habit not found with id: " + id));
+        habitRepository.deleteById(id);
     }
 }

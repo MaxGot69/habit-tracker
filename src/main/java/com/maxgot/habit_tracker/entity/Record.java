@@ -9,13 +9,17 @@ import java.time.Instant;
 @Entity
 @Getter
 @Setter
+@Table(name = "records")
 public class Record {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long habitId;
+    //private Long habitId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "habit_id", nullable = false)
+    private Habit habit;
 
     @Column(name = "date", nullable = false, updatable = false)
     @CreationTimestamp
@@ -23,7 +27,7 @@ public class Record {
 
     public Record(){
     }
-    public Record(Long habitId) {
-        this.habitId = habitId;
+    public Record(Habit habit) {
+        this.habit = habit;
     }
 }

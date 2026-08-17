@@ -5,6 +5,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import lombok.Getter;
 import lombok.Setter;
 import java.time.Instant;
+import java.time.LocalDate;
 
 @Entity
 @Getter
@@ -22,8 +23,7 @@ public class Record {
     private Habit habit;
 
     @Column(name = "date", nullable = false, updatable = false)
-    @CreationTimestamp
-    private Instant date;
+    private LocalDate date;
 
     public Record(){
     }

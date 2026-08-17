@@ -6,6 +6,7 @@ import com.maxgot.habit_tracker.entity.Habit;
 import com.maxgot.habit_tracker.exception.HabitNotFoundException;
 import com.maxgot.habit_tracker.repository.HabitRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -26,6 +27,7 @@ public class HabitService {
         this.habitRepository = habitRepository;
     }
 
+    @Transactional
     public HabitResponse create(HabitRequest request) {
 
         Habit habit = new Habit();
@@ -46,6 +48,7 @@ public class HabitService {
         return response;
     }
 
+    @Transactional(readOnly = true)
     public HabitResponse getById(Long id) {
         Habit habit = habitRepository.findById(id)
                 .orElseThrow(() -> new HabitNotFoundException("Habit not found with id: " + id));
@@ -59,6 +62,7 @@ public class HabitService {
             return response;
     }
 
+    @Transactional(readOnly = true)
     public List<HabitResponse> getAll(){
         List<HabitResponse> responses = new ArrayList<>();
         for (Habit habit : habitRepository.findAll()) {
@@ -73,6 +77,7 @@ public class HabitService {
         return responses;
     }
 
+    @Transactional
     public HabitResponse update(Long id, HabitRequest request) {
         Habit habit = habitRepository.findById(id)
                 .orElseThrow(() -> new HabitNotFoundException("Habit not found with id: " + id));
@@ -89,6 +94,7 @@ public class HabitService {
         return response;
     }
 
+    @Transactional
     public void delete(Long id) {
         Habit habit = habitRepository.findById(id)
                 .orElseThrow(() -> new HabitNotFoundException("Habit not found with id: " + id));

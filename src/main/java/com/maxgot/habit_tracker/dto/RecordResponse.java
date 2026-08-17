@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.time.LocalDate;
 
 /*
 ответ при отметке выполнения
@@ -16,5 +17,5 @@ public class RecordResponse {
 
     private Long habitId;
 
-    private Instant date;
+    private LocalDate date;
 }

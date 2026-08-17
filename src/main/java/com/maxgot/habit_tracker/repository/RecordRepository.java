@@ -9,5 +9,7 @@ import com.maxgot.habit_tracker.entity.Record;
 
 public interface RecordRepository extends JpaRepository<Record, Long> {
     List<Record> findByHabitId(Long habitId);
-    boolean existsByHabitIdAndDate(Habit habit, LocalDate date);
+    boolean existsByHabitIdAndDate(Long habitId, LocalDate date);
+
+    List<Record> findByHabitIdAndDateBetween(Long habitId, LocalDate start, LocalDate end);
 }

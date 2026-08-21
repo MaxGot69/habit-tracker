@@ -9,5 +9,5 @@ spring:
     enabled: false
 
 jwt:
-  secret: mySuperSecretKeyForJwtThatIsAtLeast32Chars123
+  secret: testSecretKeyForIntegrationTests123
   expiration: 86400000

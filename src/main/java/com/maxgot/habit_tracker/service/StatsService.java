@@ -3,9 +3,12 @@ package com.maxgot.habit_tracker.service;
 import com.maxgot.habit_tracker.dto.*;
 import com.maxgot.habit_tracker.entity.Habit;
 import com.maxgot.habit_tracker.entity.Record;
+import com.maxgot.habit_tracker.entity.User;
 import com.maxgot.habit_tracker.exception.HabitNotFoundException;
 import com.maxgot.habit_tracker.repository.HabitRepository;
 import com.maxgot.habit_tracker.repository.RecordRepository;
+import com.maxgot.habit_tracker.repository.UserRepository;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -19,10 +22,13 @@ import java.util.stream.Collectors;
 public class StatsService {
     private final HabitRepository habitRepository;
     private final RecordRepository recordRepository;
+    private final UserRepository userRepository;
 
-    public StatsService(HabitRepository habitRepository, RecordRepository recordRepository) {
+    public StatsService(HabitRepository habitRepository, RecordRepository recordRepository,
+                        UserRepository userRepository) {
         this.habitRepository = habitRepository;
         this.recordRepository = recordRepository;
+        this.userRepository = userRepository;
     }
 
     //Ниже метод подсчет серий
@@ -78,7 +84,8 @@ public class StatsService {
 
     public DailyStatsResponse getDailyStats() {
         LocalDate today = LocalDate.now();
-        List<Habit> habits = habitRepository.findAll();
+        User user = getCurrentUser();
+        List<Habit> habits = habitRepository.findByUser(user);
         List<HabitDailyDto> dailyList = new ArrayList<>();
 
         for (Habit habit : habits) {
@@ -98,7 +105,8 @@ public class StatsService {
     public WeekStatsResponse getWeekStats() {
         LocalDate today = LocalDate.now();
         LocalDate start = today.minusDays(6);
-        List<Habit> habits = habitRepository.findAll();
+        User user = getCurrentUser();
+        List<Habit> habits = habitRepository.findByUser(user);
         List<WeekDayDto> weekList = new ArrayList<>();
 
         for (LocalDate date = start; !date.isAfter(today); date = date.plusDays(1)) {
@@ -118,5 +126,12 @@ public class StatsService {
         WeekStatsResponse response = new WeekStatsResponse();
         response.setWeek(weekList);
         return response;
+    }
+
+    private User getCurrentUser() {
+        String username = SecurityContextHolder.getContext()
+                .getAuthentication().getName();
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
     }
 }

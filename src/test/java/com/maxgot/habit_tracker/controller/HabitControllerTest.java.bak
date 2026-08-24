@@ -1,0 +1,82 @@
+package com.maxgot.habit_tracker.controller;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.maxgot.habit_tracker.dto.HabitRequest;
+import com.maxgot.habit_tracker.dto.HabitResponse;
+import com.maxgot.habit_tracker.exception.HabitNotFoundException;
+import com.maxgot.habit_tracker.service.HabitService;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+
+import java.time.Instant;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@WebMvcTest(HabitController.class)
+class HabitControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @MockBean
+    private HabitService habitService;
+
+    @Test
+    void getById_whenExists_shouldReturn200() throws Exception {
+        HabitResponse response = new HabitResponse();
+        response.setId(1L);
+        response.setName("Пить воду");
+        response.setDescription("2 литра");
+        response.setTarget(7);
+        response.setCreatedAt(Instant.now());
+
+        when(habitService.getById(1L)).thenReturn(response);
+
+        mockMvc.perform(get("/api/habits/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.name").value("Пить воду"));
+    }
+
+    @Test
+    void getById_whenNotExists_shouldReturn404() throws Exception {
+        when(habitService.getById(99L)).thenThrow(new HabitNotFoundException("Habit not found with id: 99"));
+
+        mockMvc.perform(get("/api/habits/99"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void create_withValidBody_shouldReturn201() throws Exception {
+        HabitRequest request = new HabitRequest();
+        request.setName("Пить воду");
+        request.setDescription("2 литра");
+        request.setTarget(7);
+
+        HabitResponse response = new HabitResponse();
+        response.setId(1L);
+        response.setName("Пить воду");
+        response.setDescription("2 литра");
+        response.setTarget(7);
+        response.setCreatedAt(Instant.now());
+
+        when(habitService.create(any(HabitRequest.class))).thenReturn(response);
+
+        mockMvc.perform(post("/api/habits")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.name").value("Пить воду"));
+    }
+}

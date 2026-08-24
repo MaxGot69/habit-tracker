@@ -5,6 +5,8 @@ import com.maxgot.habit_tracker.dto.LoginResponse;
 import com.maxgot.habit_tracker.dto.RegisterRequest;
 import com.maxgot.habit_tracker.dto.RegisterResponse;
 import com.maxgot.habit_tracker.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +25,10 @@ public class AuthController {
         this.userService = userService;
     }
 
+    @Operation(summary = "Регистрация",
+            description = "Регистрирует пользователя")
+    @ApiResponse(responseCode = "201", description = "Регистрация успех")
+    @ApiResponse(responseCode = "404", description = "Ошибка регистрации")
     @PostMapping("/register")
     public ResponseEntity<RegisterResponse> registerUser(
             @Valid @RequestBody RegisterRequest request
@@ -34,6 +40,10 @@ public class AuthController {
                 .body(response);
     }
 
+    @Operation(summary = "Логин пользователя",
+            description = "Вход пользователя в аккаунт")
+    @ApiResponse(responseCode = "201", description = "Пользователь успешно зашел")
+    @ApiResponse(responseCode = "404", description = "Ошибка входа")
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> loginUser(
             @Valid @RequestBody LoginRequest request

@@ -10,15 +10,11 @@ import com.maxgot.habit_tracker.repository.UserRepository;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.maxgot.habit_tracker.mapper.HabitMapper;
 
-import java.time.Instant;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.Optional;
-
 
 @Service
 public class HabitService {
@@ -27,32 +23,23 @@ public class HabitService {
 
     private final HabitRepository habitRepository;
     private final UserRepository userRepository;
+    private final HabitMapper habitMapper;
 
-    public HabitService(HabitRepository habitRepository, UserRepository userRepository){
+    public HabitService(HabitRepository habitRepository,
+                        UserRepository userRepository,
+                        HabitMapper habitMapper){
 
         this.habitRepository = habitRepository;
         this.userRepository = userRepository;
+        this.habitMapper = habitMapper;
     }
 
     @Transactional
     public HabitResponse create(HabitRequest request) {
-
-        Habit habit = new Habit();
-        //TODO:возможно заменить на modeleMapper или MapStruct
-        habit.setName(request.getName());
-        habit.setDescription(request.getDescription());
-        habit.setTarget(request.getTarget());
-        habit.setCreatedAt(Instant.now());
+        Habit habit = habitMapper.toEntity(request);
         habit.setUser(getCurrentUser()); //юзер
         Habit saved = habitRepository.save(habit);
-
-        HabitResponse response = new HabitResponse();
-        response.setId(habit.getId());
-        response.setName(habit.getName());
-        response.setDescription(habit.getDescription());
-        response.setTarget(habit.getTarget());
-        response.setCreatedAt(habit.getCreatedAt());
-        return response;
+        return habitMapper.toResponse(saved);
     }
 
     @Transactional(readOnly = true)
@@ -60,12 +47,7 @@ public class HabitService {
         Habit habit = habitRepository.findByIdAndUser(id, getCurrentUser())
                 .orElseThrow(() -> new HabitNotFoundException("Habit not found with id: " + id));
 
-            HabitResponse response = new HabitResponse();
-            response.setId(habit.getId());
-            response.setName(habit.getName());
-            response.setDescription(habit.getDescription());
-            response.setTarget(habit.getTarget());
-            response.setCreatedAt(habit.getCreatedAt());
+            HabitResponse response = habitMapper.toResponse(habit);
             return response;
     }
 
@@ -75,12 +57,7 @@ public class HabitService {
         List<Habit> habits = habitRepository.findByUser(user);
         List<HabitResponse> responses = new ArrayList<>();
         for (Habit habit : habits) {
-            HabitResponse response = new HabitResponse();
-            response.setId(habit.getId());
-            response.setName(habit.getName());
-            response.setDescription(habit.getDescription());
-            response.setTarget(habit.getTarget());
-            response.setCreatedAt(habit.getCreatedAt());
+            HabitResponse response = habitMapper.toResponse(habit);
             responses.add(response);
         }
         return responses;
@@ -95,12 +72,8 @@ public class HabitService {
         habit.setDescription(request.getDescription());
         habit.setTarget(request.getTarget());
         habitRepository.save(habit);
-        response.setId(habit.getId());
-        response.setName(habit.getName());
-        response.setDescription(habit.getDescription());
-        response.setTarget(habit.getTarget());
-        response.setCreatedAt(habit.getCreatedAt());
-        return response;
+        return habitMapper.toResponse(habit);
+
     }
 
     @Transactional

@@ -14,9 +14,6 @@ import org.springframework.stereotype.Service;
 import javax.crypto.SecretKey;
 import java.util.Date;
 
-// ВНИМАНИЕ: это временная версия для понимания механизма
-// В Части 2 ты вынесешь SECRET_KEY в переменные окружения
-// Никогда не коммить захардкоженные секреты в Git
 @Service
 public class JwtService {
 

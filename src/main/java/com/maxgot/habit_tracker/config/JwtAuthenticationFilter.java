@@ -1,5 +1,6 @@
 package com.maxgot.habit_tracker.config;
 
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -42,21 +43,27 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = authHeader.substring(7);
 
         // 4. Достаём username из токена
-        String username = jwtService.extractUsername(token);
+        try {
+            String username = jwtService.extractUsername(token);
 
-        // 5. Если username есть и пользователь ещё не аутентифицирован в этом запросе
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+            // 5. Если username есть и пользователь ещё не аутентифицирован в этом запросе
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-            // 6. Проверяем что токен валиден
-            if (jwtService.isTokenValid(token, userDetails)) {
-                // 7. Создаём объект аутентификации и кладём в контекст
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails, null, userDetails.getAuthorities());
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+
+                // 6. Проверяем что токен валиден
+                if (jwtService.isTokenValid(token, userDetails)) {
+                    // 7. Создаём объект аутентификации и кладём в контекст
+                    UsernamePasswordAuthenticationToken authToken =
+                            new UsernamePasswordAuthenticationToken(
+                                    userDetails, null, userDetails.getAuthorities());
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
             }
+        }catch (JwtException | IllegalArgumentException e) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired token");
+            return;
         }
 
         filterChain.doFilter(request, response);

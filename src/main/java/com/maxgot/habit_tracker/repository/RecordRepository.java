@@ -1,6 +1,7 @@
 package com.maxgot.habit_tracker.repository;
 
 import com.maxgot.habit_tracker.entity.Habit;
+import com.maxgot.habit_tracker.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDate;
@@ -12,4 +13,5 @@ public interface RecordRepository extends JpaRepository<Record, Long> {
     boolean existsByHabitIdAndDate(Long habitId, LocalDate date);
 
     List<Record> findByHabitIdAndDateBetween(Long habitId, LocalDate start, LocalDate end);
+    List<Record> findByHabit_UserAndDateBetween(User user, LocalDate start, LocalDate end);
 }

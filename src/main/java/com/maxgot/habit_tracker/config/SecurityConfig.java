@@ -1,5 +1,6 @@
 package com.maxgot.habit_tracker.config;
 
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -35,6 +36,11 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()          // регистрация и логин — открыты
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll() // Swagger — открыт
                         .anyRequest().authenticated()                          // всё остальное — только с токеном
+                )
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Authentication required");
+                        })
                 )
                 // добавляем наш JWT-фильтр ПЕРЕД стандартным фильтром логина
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

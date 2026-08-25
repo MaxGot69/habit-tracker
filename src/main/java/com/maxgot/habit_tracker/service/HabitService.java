@@ -6,45 +6,40 @@ import com.maxgot.habit_tracker.entity.Habit;
 import com.maxgot.habit_tracker.entity.User;
 import com.maxgot.habit_tracker.exception.HabitNotFoundException;
 import com.maxgot.habit_tracker.repository.HabitRepository;
-import com.maxgot.habit_tracker.repository.UserRepository;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.maxgot.habit_tracker.mapper.HabitMapper;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 
 @Service
 public class HabitService {
-    AtomicLong idCounter = new AtomicLong(1);
-    Long id;
 
     private final HabitRepository habitRepository;
-    private final UserRepository userRepository;
     private final HabitMapper habitMapper;
+    private final CurrentUserService currentUserService;
 
     public HabitService(HabitRepository habitRepository,
-                        UserRepository userRepository,
-                        HabitMapper habitMapper){
+                        HabitMapper habitMapper,
+                        CurrentUserService currentUserService){
 
         this.habitRepository = habitRepository;
-        this.userRepository = userRepository;
         this.habitMapper = habitMapper;
+        this.currentUserService = currentUserService;
     }
 
     @Transactional
     public HabitResponse create(HabitRequest request) {
         Habit habit = habitMapper.toEntity(request);
-        habit.setUser(getCurrentUser()); //юзер
+        habit.setUser(currentUserService.getCurrentUser());
         Habit saved = habitRepository.save(habit);
         return habitMapper.toResponse(saved);
     }
 
     @Transactional(readOnly = true)
     public HabitResponse getById(Long id) {
-        Habit habit = habitRepository.findByIdAndUser(id, getCurrentUser())
+        Habit habit = habitRepository.findByIdAndUser(id, currentUserService.getCurrentUser())
                 .orElseThrow(() -> new HabitNotFoundException("Habit not found with id: " + id));
 
             HabitResponse response = habitMapper.toResponse(habit);
@@ -53,7 +48,7 @@ public class HabitService {
 
     @Transactional(readOnly = true)
     public List<HabitResponse> getAll(){
-        User user = getCurrentUser();
+        User user = currentUserService.getCurrentUser();
         List<Habit> habits = habitRepository.findByUser(user);
         List<HabitResponse> responses = new ArrayList<>();
         for (Habit habit : habits) {
@@ -65,7 +60,7 @@ public class HabitService {
 
     @Transactional
     public HabitResponse update(Long id, HabitRequest request) {
-        Habit habit = habitRepository.findByIdAndUser(id, getCurrentUser())
+        Habit habit = habitRepository.findByIdAndUser(id, currentUserService.getCurrentUser())
                 .orElseThrow(() -> new HabitNotFoundException("Habit not found with id: " + id));
         HabitResponse response = new HabitResponse();
         habit.setName(request.getName());
@@ -78,15 +73,8 @@ public class HabitService {
 
     @Transactional
     public void delete(Long id) {
-        Habit habit = habitRepository.findByIdAndUser(id, getCurrentUser())
+        Habit habit = habitRepository.findByIdAndUser(id, currentUserService.getCurrentUser())
                 .orElseThrow(() -> new HabitNotFoundException("Habit not found with id: " + id));
         habitRepository.delete(habit);
-    }
-
-    private User getCurrentUser() {
-        String username = SecurityContextHolder.getContext()
-                .getAuthentication().getName();
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
     }
 }

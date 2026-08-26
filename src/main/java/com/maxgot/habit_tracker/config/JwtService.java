@@ -55,9 +55,4 @@ public class JwtService {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }
-
-    @PostConstruct
-    public void init() {
-        System.out.println("JWT Secret: " + secretKey);
-    }
 }

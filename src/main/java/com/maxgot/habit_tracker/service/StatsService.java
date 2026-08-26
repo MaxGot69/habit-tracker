@@ -50,7 +50,7 @@ public class StatsService {
         //подсчитать колво записей в списке
         totalCompletions = records.size();
         //процент выполнения
-        long totalDays = ChronoUnit.DAYS.between(habit.getCreatedAt(), LocalDate.now()) + 1;
+        long totalDays = ChronoUnit.DAYS.between(startDate, LocalDate.now()) + 1;
         double completionRate = (double) totalCompletions / totalDays * 100;
 
         //список записей лист рекорд в сет локалдэйт
@@ -94,8 +94,14 @@ public class StatsService {
         List<Habit> habits = habitRepository.findByUser(user);
         List<HabitDailyDto> dailyList = new ArrayList<>();
 
+        //Один запрос за все сегодняшние записи
+        List<Record> records = recordRepository.findByHabit_UserAndDateBetween(user, today, today);
+        //  Собрать ID привычек, у которых есть запись
+        Set<Long> completedIds = records.stream()
+                .map(record -> record.getHabit().getId())
+                .collect(Collectors.toSet());
         for (Habit habit : habits) {
-            boolean completed = recordRepository.existsByHabitIdAndDate(habit.getId(), today);
+            boolean completed = completedIds.contains(habit.getId());
             HabitDailyDto dto = new HabitDailyDto();
             dto.setId(habit.getId());
             dto.setName(habit.getName());
